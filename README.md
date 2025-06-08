@@ -3,61 +3,115 @@
 
 This assignment focuses on building a RESTful API using Express.js, implementing proper routing, middleware, and error handling.
 
-## Assignment Overview
-
-You will:
-1. Set up an Express.js server
-2. Create RESTful API routes for a product resource
-3. Implement custom middleware for logging, authentication, and validation
-4. Add comprehensive error handling
-5. Develop advanced features like filtering, pagination, and search
-
 ## Getting Started
 
-1. Accept the GitHub Classroom assignment invitation
-2. Clone your personal repository that was created by GitHub Classroom
-3. Install dependencies:
+1. Install dependencies:
    ```
    npm install
    ```
-4. Run the server:
+2. Run the server:
    ```
    npm start
    ```
-
-## Files Included
-
-- `Week2-Assignment.md`: Detailed assignment instructions
-- `server.js`: Starter Express.js server file
-- `.env.example`: Example environment variables file
-
-## Requirements
-
-- Node.js (v18 or higher)
-- npm or yarn
-- Postman, Insomnia, or curl for API testing
+3. The server listens on port 3000 by default.
 
 ## API Endpoints
 
-The API will have the following endpoints:
+### Root
+- `GET /`
+  - Returns a welcome message.
 
-- `GET /api/products`: Get all products
-- `GET /api/products/:id`: Get a specific product
-- `POST /api/products`: Create a new product
-- `PUT /api/products/:id`: Update a product
-- `DELETE /api/products/:id`: Delete a product
+### Products
+- `GET /api/products`
+  - Returns a list of products.
+  - Supports query parameters:
+    - `category` (string): filter products by category.
+    - `search` (string): search products by name.
+    - `page` (number): page number for pagination (default 1).
+    - `limit` (number): number of products per page (default 10).
+  - Response:
+    ```json
+    {
+      "page": 1,
+      "limit": 10,
+      "total": 3,
+      "products": [
+        {
+          "id": "1",
+          "name": "Laptop",
+          "description": "High-performance laptop with 16GB RAM",
+          "price": 1200,
+          "category": "electronics",
+          "inStock": true
+        },
+        ...
+      ]
+    }
+    ```
 
-## Submission
+- `GET /api/products/:id`
+  - Returns a specific product by ID.
+  - Response:
+    ```json
+    {
+      "id": "1",
+      "name": "Laptop",
+      "description": "High-performance laptop with 16GB RAM",
+      "price": 1200,
+      "category": "electronics",
+      "inStock": true
+    }
+    ```
+  - Error: 404 if product not found.
 
-Your work will be automatically submitted when you push to your GitHub Classroom repository. Make sure to:
+- `POST /api/products`
+  - Creates a new product.
+  - Requires JSON body with fields: `name` (string), `description` (string), `price` (number), `category` (string), `inStock` (boolean).
+  - Requires header `x-api-key` with value `12345`.
+  - Response: 201 Created with the new product object.
+  - Error: 400 for validation errors, 401 for missing/invalid API key.
 
-1. Complete all the required API endpoints
-2. Implement the middleware and error handling
-3. Document your API in the README.md
-4. Include examples of requests and responses
+- `PUT /api/products/:id`
+  - Updates an existing product by ID.
+  - Requires JSON body with fields as in POST.
+  - Requires header `x-api-key` with value `12345`.
+  - Response: updated product object.
+  - Error: 400 for validation errors, 401 for missing/invalid API key, 404 if product not found.
+
+- `DELETE /api/products/:id`
+  - Deletes a product by ID.
+  - Requires header `x-api-key` with value `12345`.
+  - Response: 204 No Content.
+  - Error: 401 for missing/invalid API key, 404 if product not found.
+
+- `GET /api/products/stats/category-count`
+  - Returns count of products grouped by category.
+  - Response example:
+    ```json
+    {
+      "electronics": 2,
+      "kitchen": 1
+    }
+    ```
+
+## Middleware
+
+- Logger middleware logs request method, URL, and timestamp.
+- Authentication middleware checks for API key in `x-api-key` header.
+- Validation middleware validates product data on creation and update.
+- Global error handling middleware returns 500 Internal Server Error for unhandled errors.
+
+## Testing
+
+Use Postman, Insomnia, or curl to test the API endpoints. Include the `x-api-key` header with value `12345` for protected routes.
+
+## Notes
+
+- The API uses an in-memory data store; data will reset on server restart.
+- Pagination defaults to page 1 and 10 items per page if not specified.
 
 ## Resources
 
 - [Express.js Documentation](https://expressjs.com/)
 - [RESTful API Design Best Practices](https://restfulapi.net/)
-- [HTTP Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) 
+- [HTTP Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)

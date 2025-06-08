@@ -1,71 +1,68 @@
 // server.js - Starter Express server for Week 2 assignment
 
-// Import required modules
 const express = require('express');
 const bodyParser = require('body-parser');
-const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
+const productsRouter = require('./routes/products');
 
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/productsdb', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => {
+  console.log('Connected to MongoDB');
+}).catch((err) => {
+  console.error('MongoDB connection error:', err);
+});
 
 // Middleware setup
 app.use(bodyParser.json());
 
-// Sample in-memory products database
-let products = [
-  {
-    id: '1',
-    name: 'Laptop',
-    description: 'High-performance laptop with 16GB RAM',
-    price: 1200,
-    category: 'electronics',
-    inStock: true
-  },
-  {
-    id: '2',
-    name: 'Smartphone',
-    description: 'Latest model with 128GB storage',
-    price: 800,
-    category: 'electronics',
-    inStock: true
-  },
-  {
-    id: '3',
-    name: 'Coffee Maker',
-    description: 'Programmable coffee maker with timer',
-    price: 50,
-    category: 'kitchen',
-    inStock: false
+// Logger middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// Authentication middleware
+app.use((req, res, next) => {
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey || apiKey !== '12345') {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
   }
-];
+  next();
+});
 
 // Root route
 app.get('/', (req, res) => {
-  res.send('Welcome to the Product API! Go to /api/products to see all products.');
+  res.json({
+    message: 'Welcome to the Product API!',
+    endpoints: {
+      getAllProducts: '/api/products',
+      getProductById: '/api/products/:id',
+      createProduct: '/api/products',
+      updateProduct: '/api/products/:id',
+      deleteProduct: '/api/products/:id',
+      productStats: '/api/products/stats/category-count'
+    }
+  });
 });
 
-// TODO: Implement the following routes:
-// GET /api/products - Get all products
-// GET /api/products/:id - Get a specific product
-// POST /api/products - Create a new product
-// PUT /api/products/:id - Update a product
-// DELETE /api/products/:id - Delete a product
+// Use products router
+app.use('/api/products', productsRouter);
 
-// Example route implementation for GET /api/products
-app.get('/api/products', (req, res) => {
-  res.json(products);
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
-
-// TODO: Implement custom middleware for:
-// - Request logging
-// - Authentication
-// - Error handling
 
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-// Export the app for testing purposes
-module.exports = app; 
+module.exports = app;
